@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Dict
+import pandas as pd
 
 
 def l_stat(Y: np.ndarray, tk: float, bdef: float) -> Dict:
@@ -118,7 +119,9 @@ def l_stat(Y: np.ndarray, tk: float, bdef: float) -> Dict:
     else:
         print("terrace alert")
 
-def h_stat_2(dy, bdef, max_bunch_size=300):
+# Heavy statistics, returns pandas dataframe with results
+# TODO: add better colum names with final statistics
+def h_stat(dy, bdef, max_bunch_size=300) -> pd.DataFrame:
     M = len(dy)
 
     bszi = np.zeros(max_bunch_size)
@@ -144,7 +147,7 @@ def h_stat_2(dy, bdef, max_bunch_size=300):
     tla = 0.0
 
     bno = 0
-    inc = 0 
+    inc = 0
     dyi = dy[0]
     if dyi <= bdef:
         tla = dyi
@@ -174,14 +177,14 @@ def h_stat_2(dy, bdef, max_bunch_size=300):
     for i in range(1, M):
         dyi = dy[i]
         if dyi <= bdef:
-            if dy[i-1] > bdef:
+            if dy[i - 1] > bdef:
                 tla = dyi
                 tmin = dyi
                 tbw = dyi
                 bno += 1
-                fbd[bno-1] = dyi
+                fbd[bno - 1] = dyi
                 inc = 2
-                for Ip in range(i+1, M):
+                for Ip in range(i + 1, M):
                     dyip = dy[Ip]
                     if dyip <= bdef:
                         inc += 1
@@ -191,52 +194,53 @@ def h_stat_2(dy, bdef, max_bunch_size=300):
                         tla = dyip
                     else:
                         break
-                bd[bno-1] = tbw / float(inc - 1)
-                bw[bno-1] = tbw
-                mindi[bno-1] = tmin
-                bsz[bno-1] = inc
-                lbd[bno-1] = tla
+                bd[bno - 1] = tbw / float(inc - 1)
+                bw[bno - 1] = tbw
+                mindi[bno - 1] = tmin
+                bsz[bno - 1] = inc
+                lbd[bno - 1] = tla
+
+
 #                  To account for the situation when the bunch crosses the
 #                   boundary conditions:
-    if dy[0] <= bdef and dy[M-1] <= bdef:
-        ibw = bsz[0] + bsz[bno-1] - 1
-        bw[0] += bw[bno-1]
+    if dy[0] <= bdef and dy[M - 1] <= bdef:
+        ibw = bsz[0] + bsz[bno - 1] - 1
+        bw[0] += bw[bno - 1]
         bd[0] = bw[0] / float(ibw - 1)
-        mindi[0] = min(mindi[0], mindi[bno-1])
+        mindi[0] = min(mindi[0], mindi[bno - 1])
         bsz[0] = ibw
-        fbd[0] = fbd[bno-1]
-        bsz[bno-1] = 0
-        bd[bno-1] = 0.0
-        bw[bno-1] = 0.0
-        mindi[bno-1] = 0.0
-        lbd[bno-1] = 0.0
+        fbd[0] = fbd[bno - 1]
+        bsz[bno - 1] = 0
+        bd[bno - 1] = 0.0
+        bw[bno - 1] = 0.0
+        mindi[bno - 1] = 0.0
+        lbd[bno - 1] = 0.0
         bno -= 1
 
     if bno > 0:
-        print(bsz)
-        for i in range(0, bno+1):
-            bszi = bsz[i-1]
+        for i in range(0, bno + 1):
+            bszi = bsz[i - 1]
             if bszi > max_bunch_size:
                 print(f'Alert: Bunch Size exceeds {max_bunch_size=}')
                 continue
-            tmin = mindi[i-1]
-            avmn[bszi-1] += tmin
-            if tmin < absmin[bszi-1]:
-                absmin[bszi-1] = tmin
-            tmin = fbd[i-1]
-            avf[bszi-1] += tmin
-            if tmin < fdmin[bszi-1]:
-                fdmin[bszi-1] = tmin
-            tmin = bd[i-1]
-            avbd[bszi-1] += tmin
-            if tmin < bdmin[bszi-1]:
-                bdmin[bszi-1] = tmin
-            tmin = bw[i-1]
-            avbw[bszi-1, 0] += tmin
-            avbw[bszi-1, 1] += 1
-            if tmin < bwmin[bszi-1]:
-                bwmin[bszi-1] = tmin
-            avl[bszi-1] += lbd[i-1]
+            tmin = mindi[i - 1]
+            avmn[bszi - 1] += tmin
+            if tmin < absmin[bszi - 1]:
+                absmin[bszi - 1] = tmin
+            tmin = fbd[i - 1]
+            avf[bszi - 1] += tmin
+            if tmin < fdmin[bszi - 1]:
+                fdmin[bszi - 1] = tmin
+            tmin = bd[i - 1]
+            avbd[bszi - 1] += tmin
+            if tmin < bdmin[bszi - 1]:
+                bdmin[bszi - 1] = tmin
+            tmin = bw[i - 1]
+            avbw[bszi - 1, 0] += tmin
+            avbw[bszi - 1, 1] += 1
+            if tmin < bwmin[bszi - 1]:
+                bwmin[bszi - 1] = tmin
+            avl[bszi - 1] += lbd[i - 1]
 
         # # LOOP 1. Prints too much, disabled for now
         # print("LOOP 1:")
@@ -246,34 +250,41 @@ def h_stat_2(dy, bdef, max_bunch_size=300):
         #         print(i, dyi, fdmin[i-1], bwmin[i-1], bdmin[i-1])
 
         # LOOP 2
+        r = []
         print("LOOP 2:")
         for i in range(1, max_bunch_size):
-            dyi = avbw[i-1, 1]
+            dyi = avbw[i - 1, 1]
             if dyi > 0:
-                print("R1: ", i, avbw[i-1, 0]/dyi, avbd[i-1]/dyi)
-                print("R2: ", i, avmn[i-1]/dyi, avf[i-1]/dyi, avl[i-1]/dyi)
+                r.append([
+                    i, avbw[i - 1, 0] / dyi, avbd[i - 1] / dyi,
+                    avmn[i - 1] / dyi, avf[i - 1] / dyi, avl[i - 1] / dyi
+                ])
+                print("R1: ", i, avbw[i - 1, 0] / dyi, avbd[i - 1] / dyi)
+                print("R2: ", i, avmn[i - 1] / dyi, avf[i - 1] / dyi,
+                      avl[i - 1] / dyi)
+    r = pd.DataFrame(r)
+    r.columns = ["bunch no", "avbw[i - 1, 0] / dyi", "avbd[i - 1] / dyi",
+                    "avmn[i - 1] / dyi", "avf[i - 1] / dyi", "avl[i - 1] / dyi"]
+    return r
 
 def test():
-    bdef = 2.0
-    with open("input.txt", "r") as f:
+    bdef = 1.0
+
+    with open("tests/test_input.txt", "r") as f:
         M = int(f.readline())
         Y = np.zeros(M)
         for i in range(Y.shape[0]):
             Y[i] = float(f.readline())
 
     output = l_stat(Y, 0.0, bdef)
-    with open("dy_s.txt", "w") as f:
-        dy_str = "\t".join([str(s) for s in output["dy"]])
-        print(dy_str, file=f)
-    # Y_str = "\t".join([str(s) for s in Y])
-    # print(f'Y\n{Y_str}\ndy\n{dy_str}')
     print("\n\n********Surface statistics (MSI)********\n\n")
     print(
         f'М = {M}\tbdef = {output["bdef"]}\tmind = {output["mind"]}\tmaxbd = {output["maxbd"]}\tmintd = {output["mintd"]}\tmaxtd = {output["maxtd"]}\tavtd = {output["avtd"]}'
     )
     print("\n\n********Surface statistics (MSII)********\n\n")
+    h_stat(output["dy"], bdef)
 
-    h_stat_2(output["dy"], bdef)
+
 
 
 if __name__ == "__main__":

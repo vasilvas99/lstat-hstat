@@ -6,7 +6,7 @@ echo input.txt
 echo ===========================================
 
 echo Compiling fortran...
-gfortran -O3 lstat_hstat_test.f90 -o test_fort.exe
+gfortran.exe -O3 fortran/lstat_hstat_test.f90 -o test_fort.exe
 echo Done
 echo ===========================================
 

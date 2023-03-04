@@ -14,24 +14,19 @@ program test_statistics
 
    real*8, allocatable :: Y(:)
    real*8, allocatable :: DY(:)
-   open (newunit=io, file="input.txt", status="old", action="read")
+   
+   open (newunit=io, file="tests/test_input.txt", status="old", action="read")
+      read (io, *) M
+      allocate (Y(M))
+      allocate (DY(M))
 
-   read (io, *) M
-   allocate (Y(M))
-   allocate (DY(M))
-
-   do i = 1, M
-      read (io, *) Y(i)
-   end do
-
+      do i = 1, M
+         read (io, *) Y(i)
+      end do
    close (io)
 
    call l_stat(Y, DY, M, bdef, mind, maxbd, mintd, maxtd, avtd)
-   ! print *, "Y", nl, Y
 
-   open (newunit=io, file="dy_s_fortran.txt", status="old", action="write")
-      write (io, *) DY
-   close (io)
    print *, nl, nl, "********Surface statistics (MSI)********", nl, nl
    print *, "M =", M, "bdef =", bdef, "mind =", mind, "maxbd =", maxbd, "mintd =", mintd, "maxtd =", maxtd, "avtd =", avtd
    print *, nl, nl, "********Surface statistics (MSII)********", nl, nl
@@ -171,10 +166,7 @@ subroutine h_stat(DY, M, bdef)
    Bno = zero
 !
    dyi = dy(1)
-   print *, dyi
-   print *, bdef
    if (dyi .le. bdef) then
-      print *, "tetets"
       tla = dyi
       tmin = dyi
       tbw = dyi
@@ -201,7 +193,6 @@ subroutine h_stat(DY, M, bdef)
       bsz(1) = inc
       lbd(1) = tla
    end if
-   print *, bsz
 
    do i = 2, M
       dyi = dy(i)
@@ -255,7 +246,6 @@ subroutine h_stat(DY, M, bdef)
 !****
 
 !****
-   print *, bsz
    if (bno .gt. 0) then
       stime = dfloat(M)/dfloat(bno)
       do i = 1, bno
